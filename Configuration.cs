@@ -28,15 +28,20 @@ namespace ClerkLib
             public List<ObservableChannel> ObservableChannels { get; set; }
             public List<EmojiWatch> EmojiWatches { get; set; }
         }
+
         public struct BotAuth
         {
             public string ApiToken { get; set; }
             public ulong GuildId { get; set; }
         }
+
         public struct TextCommand
         {
             [JsonProperty("executingName")]
             public string ExecutingName { get; set; }
+
+            [JsonProperty("appendOriginalMessageIfReply")]
+            public bool AppendOriginalMessageIfReply { get; set; }
 
             [JsonProperty("executingRoles")]
             public List<ulong> ExecutingRoles { get; set; }
@@ -50,8 +55,11 @@ namespace ClerkLib
             [JsonProperty("notificationChannelId")]
             public ulong NotificationChannelId { get; set; }
 
-            [JsonProperty("notificationMessages")]
-            public List<string> NotificationMessages { get; set; }
+            [JsonProperty("notificationTitles")]
+            public List<string> NotificationTitles { get; set; }
+
+            [JsonProperty("notificationDescriptions")]
+            public List<string> NotificationDescriptions { get; set; }
         }
 
         public class TextCommandConfig
@@ -63,6 +71,7 @@ namespace ClerkLib
         public BotAuth botAuth { get; set; }
         public TextCommandConfig textCommandConfig { get; set; }
         public BotConfig botConfig { get; set; }
+
         public Configuration()
         {
             //Read files...

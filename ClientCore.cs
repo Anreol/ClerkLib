@@ -8,9 +8,11 @@ namespace ClerkLib
     public class ClientCore
     {
         public Configuration Configuration { get => _config; }
+        public DiscordSocketClient Client { get => _client; }
+
         private DiscordSocketClient _client;
         private Configuration _config;
-
+        private TextCommands _textCommandHandler;
         public ClientCore()
         {
             _config = new ClerkLib.Configuration();
@@ -33,7 +35,7 @@ namespace ClerkLib
 
             if (_config.textCommandConfig != null)
             {
-                TextCommands.DoStuff(_client);
+                _textCommandHandler = new TextCommands(this);
             }
         }
 
