@@ -1,16 +1,36 @@
-﻿using Discord;
+﻿using ClerkLib.FileReader;
+using Discord;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 
-namespace ClerkLib
+namespace ClerkLib.Modules
 {
-    internal class TextCommands
+    internal class MessageCommand : IBotModule, IDisposable
     {
-        private ClientCore _clientcore;
+        private IJsonFileReader<List<TextCommand>> fileReader;
+        private bool disposed;
 
-        public TextCommands(ClientCore client)
+        public DiscordSocketClient discordSocketClient => _discordClient;
+        private DiscordSocketClient _discordClient;
+
+        public MessageCommand(JsonFileReader<List<TextCommand>> jsonFileReader, DiscordSocketClient socketClient)
         {
-            _clientcore = client;
-            _clientcore.Client.MessageReceived += OnMessageReceived;
+            if (jsonFileReader == null || jsonFileReader.Data.Equals(default))
+            {
+                throw new ArgumentException("The JSON data could not be loaded or failed to load.");
+            }
+            fileReader = jsonFileReader;
+            _discordClient = socketClient;
+        }
+
+        public void Subscribe()
+        {
+            _discordClient.MessageReceived += OnMessageReceived;
+        }
+
+        public void Unsubscribe()
+        {
+            _discordClient.MessageReceived -= OnMessageReceived;
         }
 
         private async Task OnMessageReceived(SocketMessage message)
@@ -23,7 +43,7 @@ namespace ClerkLib
                 return;
             }
 
-            foreach (var textCommand in _clientcore.Configuration.textCommandConfig.TextCommands)
+            foreach (var textCommand in fileReader.Data)
             {
                 // Check if the message is a reply to another message
                 if (message.Content.StartsWith(textCommand.ExecutingName) && message.Reference != null && message.Reference.MessageId.IsSpecified)
@@ -81,6 +101,47 @@ namespace ClerkLib
                     await ((SocketTextChannel)targetChannel).SendMessageAsync(embed: embedBuilder.Build());
                 }
             }
+        }
+
+        void IDisposable.Dispose()
+        {
+            if (!disposed)
+            {
+                Unsubscribe();
+                disposed = true;
+                GC.SuppressFinalize(this);
+            }
+        }
+        public struct TextCommandWrapper
+        {
+
+        }
+        public struct TextCommand
+
+        {
+            [JsonProperty("executingName")]
+            public string ExecutingName { get; set; }
+
+            [JsonProperty("appendOriginalMessageIfReply")]
+            public bool AppendOriginalMessageIfReply { get; set; }
+
+            [JsonProperty("executingRoles")]
+            public List<ulong> ExecutingRoles { get; set; }
+
+            [JsonProperty("applyingRoles")]
+            public List<ulong> ApplyingRoles { get; set; }
+
+            [JsonProperty("removingRoles")]
+            public List<ulong> RemovingRoles { get; set; }
+
+            [JsonProperty("notificationChannelId")]
+            public ulong NotificationChannelId { get; set; }
+
+            [JsonProperty("notificationTitles")]
+            public List<string> NotificationTitles { get; set; }
+
+            [JsonProperty("notificationDescriptions")]
+            public List<string> NotificationDescriptions { get; set; }
         }
     }
 }
